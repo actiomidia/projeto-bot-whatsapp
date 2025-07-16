@@ -1,0 +1,21 @@
+{
+  "key": "IYC5-XJK****",
+  "expires_at": "2026-07-17 04:28:00",
+  "expires_formatted": "17/07/2026 04:28",
+  "days_remaining": 366,
+  "is_active": true,
+  "db_status": "active",
+  "final_status": "ativa",
+  "license_type": "basic",
+  "customer_name": "Luis Rafael",
+  "max_uses": 0,
+  "current_uses": 0,
+  "usage_remaining": "Ilimitado",
+  "notes": "",
+  "created_at": "2025-07-15 16:28:25",
+  "apiStatus": "ativa",
+  "lastCheck": "2025-07-16T01:00:02.309Z",
+  "verifiedAt": "2025-07-16T01:00:02.307Z",
+  "savedAt": "2025-07-16T01:00:02.309Z",
+  "apiFailures": 0
+}

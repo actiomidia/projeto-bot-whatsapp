@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Bot - Sistema Licenciado</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Estilos específicos para sistema de licenças */
+        .license-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .license-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .license-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            color: white;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            animation: slideIn 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .license-content h2 {
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        .license-content p {
+            margin-bottom: 30px;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .license-form {
+            margin-bottom: 20px;
+        }
+
+        .license-input {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            text-align: center;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .license-input::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .license-btn {
+            background: linear-gradient(45deg, #00d4aa, #00b4d8);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .license-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .license-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ⭐ NOVOS ESTILOS PARA OPÇÕES DE PAGAMENTO */
+        .payment-options {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .payment-options h3 {
+            margin-bottom: 20px;
+            color: #00d4aa;
+            font-size: 1.3rem;
+        }
+
+        .payment-btn {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .payment-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .payment-btn.whatsapp {
+            background: linear-gradient(45deg, #25D366, #128C7E);
+        }
+
+        .payment-btn.pix {
+            background: linear-gradient(45deg, #32BCAD, #00AA95);
+        }
+
+        .status-alert {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid rgba(255, 193, 7, 0.5);
+            color: #ffc107;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-size: 0.95rem;
+        }
+
+        .status-alert.pending {
+            background: rgba(255, 193, 7, 0.2);
+            border-color: rgba(255, 193, 7, 0.5);
+            color: #ffc107;
+        }
+
+        .status-alert.expired {
+            background: rgba(220, 53, 69, 0.2);
+            border-color: rgba(220, 53, 69, 0.5);
+            color: #dc3545;
+        }
+
+        .status-alert.inactive {
+            background: rgba(108, 117, 125, 0.2);
+            border-color: rgba(108, 117, 125, 0.5);
+            color: #6c757d;
+        }
+
+        .license-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            display: none;
+            z-index: 999;
+        }
+
+        .license-status.valid {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            display: block;
+        }
+
+        .license-status.invalid {
+            background: linear-gradient(45deg, #f44336, #da190b);
+            display: block;
+        }
+
+        .license-info {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .license-info p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+        }
+
+        .error-message {
+            background: rgba(255,0,0,0.2);
+            color: #ff6b6b;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            border: 1px solid rgba(255,0,0,0.3);
+        }
+
+        .success-message {
+            background: rgba(0,255,0,0.2);
+            color: #51cf66;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            border: 1px solid rgba(0,255,0,0.3);
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 3px solid #fff;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .main-content.blurred {
+            filter: blur(5px);
+            pointer-events: none;
+        }
+
+        .download-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            color: white;
+            text-align: center;
+        }
+
+        .download-btn {
+            background: linear-gradient(45deg, #00d4aa, #00b4d8);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <!-- Status da Licença -->
+    <div class="license-status" id="licenseStatus">
+        <i class="fas fa-shield-alt"></i> <span id="licenseStatusText">Verificando licença...</span>
+    </div>
+
+    <!-- ⭐ MODAL APRIMORADO COM OPÇÕES DE PAGAMENTO -->
+    <div class="license-modal" id="licenseModal">
+        <div class="license-content">
+            <i class="fas fa-shield-alt" style="font-size: 3rem; margin-bottom: 20px; color: #00d4aa;"></i>
+            <h2>Sistema Licenciado</h2>
+            
+            <!-- ⭐ ALERTA DE STATUS DINÂMICO -->
+            <div class="status-alert" id="statusAlert" style="display: none;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span id="statusAlertText">Status da licença</span>
+            </div>
+            
+            <p id="modalDescription">Para utilizar este bot, você precisa de uma licença válida. Insira sua chave de licença abaixo:</p>
+            
+            <div class="license-form">
+                <input 
+                    type="text" 
+                    id="licenseKeyInput" 
+                    class="license-input"
+                    placeholder="Digite sua chave de licença"
+                    maxlength="50"
+                >
+                <button id="validateLicenseBtn" class="license-btn">
+                    <i class="fas fa-key"></i> Validar Licença
+                </button>
+            </div>
+
+            <div id="licenseMessage"></div>
+
+            <!-- ⭐ OPÇÕES DE PAGAMENTO DINÂMICAS -->
+            <div class="payment-options" id="paymentOptions" style="display: none;">
+                <h3><i class="fas fa-credit-card"></i> Opções de Pagamento</h3>
+                
+                <a href="#" class="payment-btn pix" id="pixPaymentBtn">
+                    <i class="fas fa-qrcode"></i> Pagar com PIX
+                </a>
+                
+                <a href="#" class="payment-btn whatsapp" id="whatsappSupportBtn">
+                    <i class="fab fa-whatsapp"></i> Falar com Atendimento
+                </a>
+                
+                <p style="font-size: 0.9rem; opacity: 0.8; margin-top: 15px;">
+                    <i class="fas fa-info-circle"></i> 
+                    Após o pagamento, sua licença será ativada automaticamente.
+                </p>
+            </div>
+
+            <div class="license-info" id="licenseInfo" style="display: none;">
+                <h4><i class="fas fa-info-circle"></i> Informações da Licença</h4>
+                <p><strong>Chave:</strong> <span id="licenseKey">-</span></p>
+                <p><strong>Expira em:</strong> <span id="licenseExpires">-</span></p>
+                <p><strong>Usos:</strong> <span id="licenseUses">-</span></p>
+                <p><strong>Status:</strong> <span id="licenseStatusInfo">-</span></p>
+            </div>
+
+            <div class="download-section" style="margin-top: 20px;">
+                <h4><i class="fas fa-download"></i> Download do Sistema</h4>
+                <p>Após validar sua licença, você pode baixar os arquivos do bot para usar localmente:</p>
+                <a href="/api/download/bot" class="download-btn" id="downloadBtn" style="display: none;">
+                    <i class="fas fa-download"></i> Baixar WhatsApp Bot
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1><i class="fab fa-whatsapp"></i> Fast Zap</h1>
+            <p>Sistema de envio de mensagens automatizadas</p>
+            <div class="license-actions" style="margin-top: 10px;">
+                <button class="btn btn-sm btn-secondary" id="showLicenseInfo">
+                    <i class="fas fa-info-circle"></i> Info da Licença
+                </button>
+                <button class="btn btn-sm btn-danger" id="deactivateLicense">
+                    <i class="fas fa-sign-out-alt"></i> Desativar Licença
+                </button>
+            </div>
+        </header>
+
+        <div class="status-bar">
+            <div class="status-indicator" id="statusIndicator">
+                <span class="status-dot"></span>
+                <span class="status-text">Desconectado</span>
+            </div>
+        </div>
+
+        <div class="main-content" id="mainContent">
+            <!-- QR Code Section -->
+            <div class="qr-section" id="qrSection">
+                <h2>Escaneie o QR Code</h2>
+                <div class="qr-container">
+                    <div id="qrCode" class="qr-placeholder">
+                        <div class="loader"></div>
+                        <p>Aguardando QR Code...</p>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" id="requestQR" style="display: none;">
+                    <i class="fas fa-sync-alt"></i> Solicitar Novo QR Code
+                </button>
+            </div>
+
+            <!-- Message Form Section -->
+            <div class="message-section" id="messageSection" style="display: none;">
+                <h2>Enviar Mensagem</h2>
+                
+                <!-- Tabs -->
+                <div class="tabs">
+                    <button class="tab-button active" data-tab="single">
+                        <i class="fas fa-user"></i> Envio Individual
+                    </button>
+                    <button class="tab-button" data-tab="bulk">
+                        <i class="fas fa-users"></i> Envio em Massa
+                    </button>
+                    <button class="tab-button" data-tab="groups">
+                        <i class="fas fa-users-cog"></i> Grupos
+                    </button>
+                </div>
+
+                <!-- Single Message Tab -->
+                <div class="tab-content active" id="singleTab">
+                    <form id="messageForm">
+                        <div class="form-group">
+                            <label for="phoneNumber">
+                                <i class="fas fa-phone"></i> Número do WhatsApp
+                            </label>
+                            <input 
+                                type="text" 
+                                id="phoneNumber" 
+                                name="phoneNumber" 
+                                placeholder="Ex: 5521999115639" 
+                                required
+                                pattern="[0-9]+"
+                                title="Digite apenas números"
+                            >
+                            <small>Digite o número com DDD e código do país (55 para Brasil)</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="message">
+                                <i class="fas fa-comment"></i> Mensagem
+                            </label>
+                            <textarea 
+                                id="message" 
+                                name="message" 
+                                rows="4" 
+                                placeholder="Digite sua mensagem aqui..." 
+                                required
+                            ></textarea>
+                            <small id="charCount">0 caracteres</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Enviar Mensagem
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Bulk Message Tab -->
+                <div class="tab-content" id="bulkTab">
+                    <form id="bulkForm">
+                        <div class="form-group">
+                            <label for="numbersList">
+                                <i class="fas fa-list"></i> Lista de Números
+                            </label>
+                            <textarea 
+                                id="numbersList" 
+                                name="numbersList" 
+                                rows="6" 
+                                placeholder="Digite um número por linha
+Ex:
+5521999115639
+5521988776655
+5511955443322" 
+                                required
+                            ></textarea>
+                            <small id="numbersCount">0 números</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="bulkMessage">
+                                <i class="fas fa-comment"></i> Mensagem
+                            </label>
+                            <textarea 
+                                id="bulkMessage" 
+                                name="bulkMessage" 
+                                rows="4" 
+                                placeholder="Digite a mensagem que será enviada para todos os números..." 
+                                required
+                            ></textarea>
+                            <small id="bulkCharCount">0 caracteres</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="delay">
+                                <i class="fas fa-clock"></i> Intervalo entre mensagens (segundos)
+                            </label>
+                            <input 
+                                type="number" 
+                                id="delay" 
+                                name="delay" 
+                                min="1" 
+                                max="60" 
+                                value="3"
+                                required
+                            >
+                            <small>Recomendado: 3-5 segundos para evitar bloqueios</small>
+                        </div>
+
+                        <div class="form-group checkbox-group">
+                            <label>
+                                <input type="checkbox" id="stopOnError" name="stopOnError">
+                                <span>Parar ao encontrar erro</span>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Iniciar Envio em Massa
+                        </button>
+                    </form>
+
+                    <!-- Progress Bar -->
+                    <div class="bulk-progress" id="bulkProgress" style="display: none;">
+                        <h3>Progresso do Envio</h3>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-info">
+                            <span id="progressText">0/0</span>
+                            <span id="progressPercentage">0%</span>
+                        </div>
+                        <div class="progress-stats">
+                            <span class="stat-success"><i class="fas fa-check"></i> Enviados: <strong id="sentCount">0</strong></span>
+                            <span class="stat-error"><i class="fas fa-times"></i> Falhas: <strong id="failedCount">0</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Groups Tab -->
+                <div class="tab-content" id="groupsTab">
+                    <div class="groups-section">
+                        <div class="groups-header">
+                            <h3><i class="fas fa-users-cog"></i> Seus Grupos</h3>
+                            <button class="btn btn-secondary btn-sm" id="refreshGroups">
+                                <i class="fas fa-sync-alt"></i> Atualizar Lista
+                            </button>
+                        </div>
+                        
+                        <div class="groups-list" id="groupsList">
+                            <div class="loader"></div>
+                            <p>Carregando grupos...</p>
+                        </div>
+                    </div>
+
+                    <form id="groupForm">
+                        <div class="form-group">
+                            <label for="selectedGroups">
+                                <i class="fas fa-check-square"></i> Grupos Selecionados
+                            </label>
+                            <div class="selected-groups" id="selectedGroupsDisplay">
+                                <p class="no-selection">Nenhum grupo selecionado</p>
+                            </div>
+                            <small id="groupsSelectedCount">0 grupos selecionados</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="groupMessage">
+                                <i class="fas fa-comment"></i> Mensagem para Grupos
+                            </label>
+                            <textarea 
+                                id="groupMessage" 
+                                name="groupMessage" 
+                                rows="4" 
+                                placeholder="Digite a mensagem que será enviada para os grupos selecionados..." 
+                                required
+                            ></textarea>
+                            <small id="groupCharCount">0 caracteres</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="groupDelay">
+                                <i class="fas fa-clock"></i> Intervalo entre envios (segundos)
+                            </label>
+                            <input 
+                                type="number" 
+                                id="groupDelay" 
+                                name="groupDelay" 
+                                min="1" 
+                                max="60" 
+                                value="5"
+                                required
+                            >
+                            <small>Recomendado: 5-10 segundos para grupos</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Enviar para Grupos Selecionados
+                        </button>
+                    </form>
+
+                    <!-- Progress Bar for Groups -->
+                    <div class="bulk-progress" id="groupProgress" style="display: none;">
+                        <h3>Progresso do Envio para Grupos</h3>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="groupProgressFill"></div>
+                        </div>
+                        <div class="progress-info">
+                            <span id="groupProgressText">0/0</span>
+                            <span id="groupProgressPercentage">0%</span>
+                        </div>
+                        <div class="progress-stats">
+                            <span class="stat-success"><i class="fas fa-check"></i> Enviados: <strong id="groupSentCount">0</strong></span>
+                            <span class="stat-error"><i class="fas fa-times"></i> Falhas: <strong id="groupFailedCount">0</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-info" id="getInfo">
+                        <i class="fas fa-info-circle"></i> Informações
+                    </button>
+                    <button class="btn btn-danger" id="logout">
+                        <i class="fas fa-sign-out-alt"></i> Desconectar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages Log -->
+        <div class="messages-log">
+            <h3><i class="fas fa-history"></i> Log de Atividades</h3>
+            <div id="logContainer" class="log-container">
+                <p class="log-entry">Sistema iniciado. Verificando licença...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Messages -->
+    <div id="messageModal" class="modal">
+        <div class="modal-content">
+            <span class="close">×</span>
+            <h3 id="modalTitle">Notificação</h3>
+            <p id="modalMessage"></p>
+        </div>
+    </div>
+
+    <!-- ⭐ SCRIPT APRIMORADO PARA GERENCIAR OPÇÕES DE PAGAMENTO -->
+    <script>
+        // Configurações do sistema
+        const PAYMENT_CONFIG = {
+            whatsappNumber: '5521999115639', // ⭐ SUBSTITUA pelo seu número
+            pixKey: 'seuemail@exemplo.com', // ⭐ SUBSTITUA pela sua chave PIX
+            supportMessage: 'Olá! Preciso de ajuda com minha licença do Fast Zap. Minha chave é: {LICENSE_KEY}'
+        };
+
+        // Função para atualizar modal baseado no status
+        function updateModalBasedOnStatus(licenseStatus, licenseKey = '') {
+            const statusAlert = document.getElementById('statusAlert');
+            const statusAlertText = document.getElementById('statusAlertText');
+            const paymentOptions = document.getElementById('paymentOptions');
+            const modalDescription = document.getElementById('modalDescription');
+            const pixBtn = document.getElementById('pixPaymentBtn');
+            const whatsappBtn = document.getElementById('whatsappSupportBtn');
+
+            // Resetar
+            statusAlert.style.display = 'none';
+            paymentOptions.style.display = 'none';
+
+            switch(licenseStatus) {
+                case 'pendente':
+                case 'pending':
+                    statusAlert.style.display = 'block';
+                    statusAlert.className = 'status-alert pending';
+                    statusAlertText.innerHTML = '<i class="fas fa-clock"></i> Sua licença está aguardando pagamento';
+                    
+                    modalDescription.textContent = 'Sua licença foi criada mas ainda não foi paga. Escolha uma opção abaixo:';
+                    paymentOptions.style.display = 'block';
+                    
+                    // Configurar botões de pagamento
+                    pixBtn.onclick = () => handlePixPayment(licenseKey);
+                    whatsappBtn.onclick = () => handleWhatsAppSupport(licenseKey);
+                    break;
+
+                case 'expirada':
+                case 'expired':
+                    statusAlert.style.display = 'block';
+                    statusAlert.className = 'status-alert expired';
+                    statusAlertText.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Sua licença expirou';
+                    
+                    modalDescription.textContent = 'Sua licença expirou. Entre em contato para renovar:';
+                    paymentOptions.style.display = 'block';
+                    
+                    // Só mostrar WhatsApp para licenças expiradas
+                    pixBtn.style.display = 'none';
+                    whatsappBtn.onclick = () => handleWhatsAppSupport(licenseKey);
+                    break;
+
+                case 'inativa':
+                case 'inactive':
+                    statusAlert.style.display = 'block';
+                    statusAlert.className = 'status-alert inactive';
+                    statusAlertText.innerHTML = '<i class="fas fa-ban"></i> Licença desativada';
+                    
+                    modalDescription.textContent = 'Digite uma nova chave de licença:';
+                    // Não mostrar opções de pagamento para licenças inativas
+                    break;
+
+                default:
+                    modalDescription.textContent = 'Para utilizar este bot, você precisa de uma licença válida. Insira sua chave de licença abaixo:';
+            }
+        }
+
+        // Função para lidar com pagamento PIX
+        function handlePixPayment(licenseKey) {
+            // Aqui você pode integrar com sua API de pagamento
+            // Por exemplo, gerar um QR Code PIX ou redirecionar para gateway
+            
+            const pixData = `00020126580014BR.GOV.BCB.PIX0136${PAYMENT_CONFIG.pixKey}52040000530398654041.005802BR5925Fast Zap6009SAO PAULO62070503***6304`;
+            
+            // Simular geração de QR PIX (substitua pela sua integração real)
+            alert(`Pagamento PIX\n\nChave PIX: ${PAYMENT_CONFIG.pixKey}\nValor: R$ 29,90\nLicença: ${licenseKey}\n\nApós o pagamento, sua licença será ativada automaticamente.`);
+            
+            // Ou redirecionar para página de pagamento
+            // window.open(`https://seusite.com/pagamento?license=${licenseKey}`, '_blank');
+        }
+
+        // Função para abrir WhatsApp
+        function handleWhatsAppSupport(licenseKey) {
+            const message = PAYMENT_CONFIG.supportMessage.replace('{LICENSE_KEY}', licenseKey);
+            const whatsappUrl = `https://wa.me/${PAYMENT_CONFIG.whatsappNumber}?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // Integrar com o sistema de licenças existente
+        document.addEventListener('DOMContentLoaded', function() {
+            // Aguardar o licenseManager estar disponível
+            setTimeout(() => {
+                if (window.licenseManager) {
+                    // Interceptar quando o modal de licença for mostrado
+                    const originalShowLicenseRequired = window.licenseManager.showLicenseRequired;
+                    
+                    window.licenseManager.showLicenseRequired = function(message) {
+                        // Chamar função original
+                        originalShowLicenseRequired.call(this, message);
+                        
+                        // Tentar extrair status da mensagem ou fazer nova consulta
+                        this.getCurrentLicenseStatus().then(status => {
+                            updateModalBasedOnStatus(status.status, status.licenseKey);
+                        });
+                    };
+
+                    // Método para obter status atual da licença
+                    window.licenseManager.getCurrentLicenseStatus = async function() {
+                        try {
+                            // ⭐ USAR ENDPOINT SEM PROTEÇÃO
+                            const response = await fetch('/api/license/status');
+                            const data = await response.json();
+                            
+                            if (data.success && data.license) {
+                                return {
+                                    status: data.license.final_status || data.license.api_status || 'unknown',
+                                    licenseKey: data.license.key || ''
+                                };
+                            }
+                            
+                            return { status: 'unknown', licenseKey: '' };
+                        } catch (error) {
+                            console.error('Erro ao obter status:', error);
+                            return { status: 'unknown', licenseKey: '' };
+                        }
+                    };
+                }
+            }, 1000);
+        });
+    </script>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/script.js"></script>
+    <script src="js/license.js"></script>
+</body>
+</html>
